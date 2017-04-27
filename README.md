@@ -7,7 +7,7 @@ Single file, pure Bash [dehydrated](https://github.com/lukas2511/dehydrated) (fo
 Requirements
 ------------
 
- * [Bash](https://www.gnu.org/software/bash/) (
+ * [Bash](https://www.gnu.org/software/bash/)
  * [mawk](http://invisible-island.net/mawk/mawk.html) or [GNU AWK](https://www.gnu.org/software/gawk/)
  * [jq](https://github.com/stedolan/jq)
  * [publicsuffix](https://packages.debian.org/stable/publicsuffix)
