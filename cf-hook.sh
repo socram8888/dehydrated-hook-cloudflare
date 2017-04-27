@@ -144,17 +144,17 @@ deploy_challenge() {
 	local zoneid=$(get_zone_id "$fqdn")
 
 	# Some cleanup before starting
-	delete_records "$zoneid" "_acme-challange.$fqdn"
+	delete_records "$zoneid" "_acme-challenge.$fqdn"
 
-	recordid=$(create_record "$zoneid" "_acme-challange.$fqdn" TXT "$token")
-	success "Challange created - CF ID: $recordid"
+	recordid=$(create_record "$zoneid" "_acme-challenge.$fqdn" TXT "$token")
+	success "challenge created - CF ID: $recordid"
 }
 
 clean_challenge() {
 	local fqdn="$2"
 	local zoneid=$(get_zone_id "$fqdn")
 
-	delete_records "$zoneid" "_acme-challange.$fqdn"
+	delete_records "$zoneid" "_acme-challenge.$fqdn"
 }
 
 case $1 in
