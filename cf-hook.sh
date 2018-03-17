@@ -67,7 +67,7 @@ get_domain() {
 
 		END {
 			# Remove TLD
-			domain=substr(fqdn, 0, length(fqdn) - length(best) + 1)
+			domain=substr(fqdn, 1, length(fqdn) - length(best))
 
 			# Remove everything before the last dot - all subdomains, that is
 			gsub(/^.*\./, "", domain)
