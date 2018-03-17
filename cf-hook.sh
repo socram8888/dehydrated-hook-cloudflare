@@ -40,7 +40,7 @@ cf_req() {
 get_domain() {
 	local fqdn="$1"
 
-	awk -v fqdn="$fqdn" '
+	mawk -v fqdn="$fqdn" '
 		BEGIN {
 			best=""
 		}
