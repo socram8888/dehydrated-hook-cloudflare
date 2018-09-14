@@ -96,6 +96,41 @@ get_zone_id() {
 	echo "$id"
 }
 
+query_fqdn_status() {
+	local fqdn="$1"
+
+	dig +noall +comments +norec @ns.cloudflare.com "$fqdn" | sed -E -e '/status: /!d' -e 's/.* status: ([A-Z]+),.*/\1/'
+}
+
+wait_for_status() {
+	local fqdn="$1"
+	local targetStatus="$2"
+	local currentStatus
+
+	local retries=12
+	local delay=1000
+	local delaySec
+
+	while true; do
+		currentStatus=$(query_fqdn_status "$fqdn")
+		if [ "$currentStatus" == "$targetStatus" ]; then
+			return
+		fi
+
+		if [ $retries -eq 0 ]; then
+			error "Record $fqdn did not get published in time"
+			abort 1
+		else
+			delaySec=${delay:0:(-3)}.${delay:(-3)}
+			log "Waiting $delaySec seconds (current: $currentStatus)..."
+			sleep $delaySec
+
+			retries=$(($retries - 1))
+			delay=$(($delay * 15 / 10))
+		fi
+	done
+}
+
 create_record() {
 	local zone="$1"
 	local fqdn="$2"
@@ -145,8 +180,11 @@ deploy_challenge() {
 
 	# Some cleanup before starting
 	delete_records "$zoneid" "_acme-challenge.$fqdn"
+	wait_for_status "_acme-challenge.$fqdn" NXDOMAIN
 
 	recordid=$(create_record "$zoneid" "_acme-challenge.$fqdn" TXT "$token")
+	wait_for_status "_acme-challenge.$fqdn" NOERROR
+
 	success "challenge created - CF ID: $recordid"
 }
 
