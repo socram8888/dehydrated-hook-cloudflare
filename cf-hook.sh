@@ -203,7 +203,4 @@ case $1 in
 	clean_challenge)
 		clean_challenge $*
 		;;
-
-	*)
-		success "Ignoring call $1"
 esac
