@@ -96,24 +96,17 @@ get_zone_id() {
 	echo "$id"
 }
 
-query_fqdn_status() {
+wait_for_publication() {
 	local fqdn="$1"
-
-	dig +noall +comments +norec @ns.cloudflare.com "$fqdn" | sed -E -e '/status: /!d' -e 's/.* status: ([A-Z]+),.*/\1/'
-}
-
-wait_for_status() {
-	local fqdn="$1"
-	local targetStatus="$2"
-	local currentStatus
+	local type="$2"
+	local content="$3"
 
 	local retries=12
 	local delay=1000
 	local delaySec
 
 	while true; do
-		currentStatus=$(query_fqdn_status "$fqdn")
-		if [ "$currentStatus" == "$targetStatus" ]; then
+		if dig +noall +answer @ns.cloudflare.com "$fqdn" "$type" | cut -f 6- | grep -qF "$content"; then
 			return
 		fi
 
@@ -178,12 +171,8 @@ deploy_challenge() {
 	local token="$4"
 	local zoneid=$(get_zone_id "$fqdn")
 
-	# Some cleanup before starting
-	delete_records "$zoneid" "_acme-challenge.$fqdn"
-	wait_for_status "_acme-challenge.$fqdn" NXDOMAIN
-
 	recordid=$(create_record "$zoneid" "_acme-challenge.$fqdn" TXT "$token")
-	wait_for_status "_acme-challenge.$fqdn" NOERROR
+	wait_for_publication "_acme-challenge.$fqdn" TXT "\"$token\""
 
 	success "challenge created - CF ID: $recordid"
 }
