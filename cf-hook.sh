@@ -106,7 +106,7 @@ wait_for_publication() {
 	local delaySec
 
 	while true; do
-		if dig +noall +answer @ns.cloudflare.com "$fqdn" "$type" | cut -f 6- | grep -qF "$content"; then
+		if dig +noall +answer @ns.cloudflare.com "$fqdn" "$type" | awk '{print $5}' | grep -qF "$content"; then
 			return
 		fi
 
