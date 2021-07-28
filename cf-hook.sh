@@ -21,7 +21,15 @@ abort() {
 }
 
 cf_req() {
-	local response=$(curl -s -H "X-Auth-Email: ${CF_EMAIL}" -H "X-Auth-Key: ${CF_KEY}" -H "Content-Type: application/json" $*)
+	local response
+	if [ ! -z "${CF_TOKEN}" ]; then
+		response=$(curl -s -H "Authorization: Bearer ${CF_TOKEN}" -H "Content-Type: application/json" $*)
+	elif [ ! -z "${CF_EMAIL}" ] && [ ! -z "${CF_KEY}" ]; then
+		response=$(curl -s -H "X-Auth-Email: ${CF_EMAIL}" -H "X-Auth-Key: ${CF_KEY}" -H "Content-Type: application/json" $*)
+	else
+		error "Missing CF keys"
+		abort 1
+	fi
 	if [ $? -ne 0 ]; then
 		error "HTTP request failed"
 		abort 1
@@ -115,7 +123,7 @@ wait_for_publication() {
 			abort 1
 		else
 			delaySec=${delay:0:(-3)}.${delay:(-3)}
-			log "Waiting $delaySec seconds (current: $currentStatus)..."
+			log "Waiting $delaySec seconds..."
 			sleep $delaySec
 
 			retries=$(($retries - 1))

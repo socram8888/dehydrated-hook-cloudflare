@@ -20,6 +20,16 @@ sudo apt-get install bash awk jq publicsuffix
 Configuration
 -------------
 
-The scripts expects the following environment variables to be set:
- - `CF_EMAIL`: the e-mail linked to your CloudFlare account
- - `CF_KEY`: your API key. You may get yours at CloudFlare → ["My Account"](https://www.cloudflare.com/a/account/my-account).
+This hook supports authenticating using either a bearer token or the global API key. Both can be obtained at the ["API tokens"](https://dash.cloudflare.com/profile/api-tokens) section.
+
+### Bearer token
+
+This is the preferred method, as the allowed operations can be limited to updating a single DNS zone.
+
+For this method, you'd need to `export` the `CF_TOKEN` variable, with a suitable token that has read/write access to the DNS zone for which you want to issue certificates.
+
+### API key
+
+This method is less secure, as if someone were capable of reading these keys they'd have full access to your account.
+
+For this method, you'd need to `export` the `CF_EMAIL` and `CF_KEY` variables with your CloudFlare email and API key respectively.
