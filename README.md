@@ -11,6 +11,7 @@ Requirements
  * [mawk](http://invisible-island.net/mawk/mawk.html) or [GNU AWK](https://www.gnu.org/software/gawk/)
  * [jq](https://github.com/stedolan/jq)
  * [publicsuffix](https://packages.debian.org/stable/publicsuffix)
+ * [dig](https://packages.debian.org/stable/dnsutils)
 
 All the packages are available on the latest [Debian](https://debian.org) stable (jessie, at the time of writing), and may be installed using:
 ```bash
