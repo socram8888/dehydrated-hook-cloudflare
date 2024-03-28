@@ -20,6 +20,19 @@ abort() {
 	kill 0
 }
 
+if which drill &>/dev/null; then
+	resolve_record() {
+		drill -Q "$1" "$2" @ns.cloudflare.com
+	}
+elif which dig &>/dev/null; then
+	resolve_record() {
+		dig +short "$1" "$2" @ns.cloudflare.com
+	}
+else
+	echo "No DNS lookup tool installed. Please install either dig or drill"
+	abort 1
+fi
+
 cf_req() {
 	local response
 	if [ ! -z "${CF_TOKEN}" ]; then
@@ -114,7 +127,7 @@ wait_for_publication() {
 	local delaySec
 
 	while true; do
-		if dig +noall +answer @ns.cloudflare.com "$fqdn" "$type" | awk '{print $5}' | grep -qF "$content"; then
+		if resolve_record "$fqdn" "$type" | grep -qF "$content"; then
 			return
 		fi
 
