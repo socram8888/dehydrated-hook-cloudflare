@@ -22,7 +22,7 @@ abort() {
 
 if which drill &>/dev/null; then
 	resolve_record() {
-		drill -Q "$1" "$2" @ns.cloudflare.com
+		drill "$1" "$2" @ns.cloudflare.com | sed -rn "s/^.*?\.\t[0-9]+\tIN\t$2\t//p"
 	}
 elif which dig &>/dev/null; then
 	resolve_record() {
