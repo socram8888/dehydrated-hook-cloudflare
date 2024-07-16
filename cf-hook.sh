@@ -99,6 +99,14 @@ get_domain() {
 	' /usr/share/publicsuffix/effective_tld_names.dat
 }
 
+list_record_id() {
+	local zone="$1"
+	local fqdn="$2"
+
+	cf_req "https://api.cloudflare.com/client/v4/zones/${zone}/dns_records?name=${fqdn}" |
+	jq -r ".result[] | .id"
+}
+
 get_zone_id() {
 	local fqdn="$1"
 	local domain=$(get_domain "$fqdn")
@@ -152,6 +160,19 @@ create_record() {
 	local content="$4"
 	local recordid
 
+        log "Checking for already existing record $fqdn"
+        if [ ! `list_record_id "$zone" "$fqdn"` == null ]; then 
+                log "Existing record found (from previous failed attempt?) Deleting."
+                list_record_id "$zone" "$fqdn" |
+                while read recordid; do
+                        log " - Deleting $recordid"
+                        cf_req -X DELETE "https://api.cloudflare.com/client/v4/zones/${zone}/dns_records/${recordid}" >/dev/null
+                done
+        else
+                log "No existing record"
+        fi
+
+
 	log "Creating record $fqdn $type $content"
 
 	recordid=$(cf_req -X POST "https://api.cloudflare.com/client/v4/zones/${zone}/dns_records" \
@@ -164,14 +185,6 @@ create_record() {
 	fi
 
 	echo "$recordid"
-}
-
-list_record_id() {
-	local zone="$1"
-	local fqdn="$2"
-
-	cf_req "https://api.cloudflare.com/client/v4/zones/${zone}/dns_records?name=${fqdn}" |
-	jq -r ".result[] | .id"
 }
 
 delete_records() {
