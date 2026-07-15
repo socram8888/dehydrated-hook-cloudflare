@@ -20,8 +20,19 @@ abort() {
 	kill 0
 }
 
+## Only scan for databases if the user doesn't specify a custom path
 if [ -z "${DNS_SUFFIX_DATA}" ]; then
-   error "No DNS suffix data list provided.  Please install the required package."
+	for candidate in /usr/share/publicsuffix/effective_tld_names.dat /usr/local/share/public_suffix_list/public_suffix_list.dat; do
+		if [ -f "${candidate}" ]; then
+			DNS_SUFFIX_DATA="${candidate}"
+			break
+		fi
+	done
+fi
+
+if [ ! -f "${DNS_SUFFIX_DATA}" ]; then
+	error "No publicsuffix database found"
+	abort 1
 fi
 
 if which drill &>/dev/null; then
