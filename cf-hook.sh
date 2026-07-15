@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 log() {
 	echo "   $*" 1>&2
@@ -20,9 +20,24 @@ abort() {
 	kill 0
 }
 
+## Only scan for databases if the user doesn't specify a custom path
+if [ -z "${DNS_SUFFIX_DATA}" ]; then
+	for candidate in /usr/share/publicsuffix/effective_tld_names.dat /usr/local/share/public_suffix_list/public_suffix_list.dat; do
+		if [ -f "${candidate}" ]; then
+			DNS_SUFFIX_DATA="${candidate}"
+			break
+		fi
+	done
+fi
+
+if [ ! -f "${DNS_SUFFIX_DATA}" ]; then
+	error "No publicsuffix database found"
+	abort 1
+fi
+
 if which drill &>/dev/null; then
 	resolve_record() {
-		drill "$1" "$2" @ns.cloudflare.com | sed -rn "s/^.*?\.\t[0-9]+\tIN\t$2\t//p"
+		drill "$1" "$2" @ns.cloudflare.com | sed -rn "s/^.*\.\t[0-9]+\tIN\t$2\t//p"
 	}
 elif which dig &>/dev/null; then
 	resolve_record() {
@@ -96,7 +111,7 @@ get_domain() {
 			# Print appending TLD
 			print domain best
 		}
-	' /usr/share/publicsuffix/effective_tld_names.dat
+	' "${DNS_SUFFIX_DATA}"
 }
 
 get_zone_id() {
@@ -214,3 +229,16 @@ case $1 in
 		clean_challenge $*
 		;;
 esac
+
+## Keep the file consistent with upstream as they use tabs for indent, not
+## spaces.
+##
+# Local Variables:
+# indent-tabs-mode: t
+# End:
+
+## Similar for Vim users.  Make sure that the 'modeline' option is
+## enabled in Vim before assuming the below setting is working.  You
+## can do `:set modeline?` to verify.
+##
+# vim: set noexpandtab tabstop=4 shiftwidth=4 :
