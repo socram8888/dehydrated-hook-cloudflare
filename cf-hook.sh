@@ -20,6 +20,10 @@ abort() {
 	kill 0
 }
 
+if [ -z "${DNS_SUFFIX_DATA}" ]; then
+   error "No DNS suffix data list provided.  Please install the required package."
+fi
+
 if which drill &>/dev/null; then
 	resolve_record() {
 		drill "$1" "$2" @ns.cloudflare.com | sed -rn "s/^.*?\.\t[0-9]+\tIN\t$2\t//p"
@@ -96,7 +100,7 @@ get_domain() {
 			# Print appending TLD
 			print domain best
 		}
-	' /usr/share/publicsuffix/effective_tld_names.dat
+	' "${DNS_SUFFIX_DATA}"
 }
 
 get_zone_id() {
