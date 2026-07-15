@@ -218,3 +218,10 @@ case $1 in
 		clean_challenge $*
 		;;
 esac
+
+## Keep the file consistent with upstream as they use tabs for indent, not
+## spaces.
+##
+# Local Variables:
+# indent-tabs-mode: t
+# End:
