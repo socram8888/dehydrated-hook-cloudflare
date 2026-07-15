@@ -236,3 +236,9 @@ esac
 # Local Variables:
 # indent-tabs-mode: t
 # End:
+
+## Similar for Vim users.  Make sure that the 'modeline' option is
+## enabled in Vim before assuming the below setting is working.  You
+## can do `:set modeline?` to verify.
+##
+# vim: set noexpandtab tabstop=4 shiftwidth=4 :
