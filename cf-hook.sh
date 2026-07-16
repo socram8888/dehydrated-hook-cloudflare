@@ -175,17 +175,17 @@ create_record() {
 	local content="$4"
 	local recordid
 
-        log "Checking for already existing record $fqdn"
-        if [ ! `list_record_id "$zone" "$fqdn"` == null ]; then 
-                log "Existing record found (from previous failed attempt?) Deleting."
-                list_record_id "$zone" "$fqdn" |
-                while read recordid; do
-                        log " - Deleting $recordid"
-                        cf_req -X DELETE "https://api.cloudflare.com/client/v4/zones/${zone}/dns_records/${recordid}" >/dev/null
-                done
-        else
-                log "No existing record"
-        fi
+	log "Checking for already existing record $fqdn"
+	current_ids=$(list_record_id "$zone" "$fqdn")
+	if [ -n "${current_ids}" ]; then
+		log "Existing record found (from previous failed attempt?) Deleting."
+		echo "${current_ids}" | while read recordid; do
+			log " - Deleting $recordid"
+			cf_req -X DELETE "https://api.cloudflare.com/client/v4/zones/${zone}/dns_records/${recordid}" >/dev/null
+		done
+	else
+		log "No existing record"
+	fi
 
 
 	log "Creating record $fqdn $type $content"
