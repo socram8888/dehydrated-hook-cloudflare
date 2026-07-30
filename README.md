@@ -40,6 +40,10 @@ Usage
 
 Instead of editing the `cf-hook.sh` script to inject the authentication variables, I recommend that you instead create a `local-hook.sh` script and call the Cloudflare hook from there after initialising the authentication variables.
 
+Running as `root`:
+
+  - Fetch the `cf-hook.sh` script to your system with `curl https://raw.githubusercontent.com/socram8888/dehydrated-hook-cloudflare/refs/heads/master/cf-hook.sh -o /etc/dehydrated/cf-hook.sh`.
+
   - Create a the `/etc/dehydrated/local-hook.sh` script with, for example:
 
     ```bash
@@ -54,7 +58,7 @@ Instead of editing the `cf-hook.sh` script to inject the authentication variable
     fi
     ```
 
-  - Make sure it's executable with `chmod 755 /etc/dehydrated/local-hook.sh`.
+  - Make sure both are executable with `chmod 755 /etc/dehydrated/{cf,local}-hook.sh`.
 
   - Create a new local configuration file at `/etc/dehydrated/conf.d/local.sh` pointing to the local hook:
 
