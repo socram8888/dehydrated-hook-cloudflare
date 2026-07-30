@@ -49,6 +49,12 @@ else
 fi
 
 cf_req() {
+	local may_fail=false
+	if [ "$1" = "--may-fail" ]; then
+		may_fail=true
+		shift
+	fi
+
 	local response
 	if [ ! -z "${CF_TOKEN}" ]; then
 		response=$(curl -s -H "Authorization: Bearer ${CF_TOKEN}" -H "Content-Type: application/json" $*)
@@ -64,13 +70,15 @@ cf_req() {
 	fi
 
 	local success=$(echo "$response" | jq -r ".success")
-	if [ "$success" != true ]; then
-		error "CloudFlare request failed"
-		error "Response: $response"
-		abort 1
+	# Important to check $success even if $may_fail is true, in case the server doesn't return proper JSON
+	if [[ "$success" = true || ( "$success" = false && "$may_fail" = true ) ]]; then
+		echo "$response"
+		return 0
 	fi
 
-	echo "$response"
+	error "CloudFlare request failed"
+	error "Response: $response"
+	abort 1
 }
 
 get_domain() {
@@ -122,7 +130,7 @@ get_zone_id() {
 
 	local id=$(cf_req "https://api.cloudflare.com/client/v4/zones?name=${domain}" | jq -r ".result[0].id")
 
-	if [ "$id" == null ]; then
+	if [ "$id" = null ]; then
 		error "Unable to get zone ID for $fqdn"
 		abort 1
 	fi
@@ -165,20 +173,26 @@ create_record() {
 	local fqdn="$2"
 	local type="$3"
 	local content="$4"
-	local recordid
 
 	log "Creating record $fqdn $type $content"
 
-	recordid=$(cf_req -X POST "https://api.cloudflare.com/client/v4/zones/${zone}/dns_records" \
-		--data "{\"type\":\"${type}\",\"name\":\"${fqdn}\",\"content\":\"${content}\"}" |
-		jq -r ".result.id")
+	local response
+	response=$(cf_req --may-fail -X POST "https://api.cloudflare.com/client/v4/zones/${zone}/dns_records" \
+		--data "{\"type\":\"${type}\",\"name\":\"${fqdn}\",\"content\":\"${content}\"}")
 
-	if [ "$recordid" == null ]; then
-		error "Error creating DNS record"
-		abort 1
+	local recordid=$(echo "$response" | jq -r ".result.id")
+	if [ "$recordid" != null ]; then
+		log "Record created, CF ID: ${recordid}"
+	else
+		local errorcode=$(echo "$response" | jq -r ".errors[0].code")
+		if [[ "$errorcode" =~ ^(81057|81058)$ ]]; then
+			log "Record already exists, continuing"
+		else
+			error "Error creating DNS record"
+			error "Response: $response"
+			abort 1
+		fi
 	fi
-
-	echo "$recordid"
 }
 
 list_record_id() {
@@ -207,10 +221,10 @@ deploy_challenge() {
 	local token="$4"
 	local zoneid=$(get_zone_id "$fqdn")
 
-	recordid=$(create_record "$zoneid" "_acme-challenge.$fqdn" TXT "$token")
+	create_record "$zoneid" "_acme-challenge.$fqdn" TXT "$token"
 	wait_for_publication "_acme-challenge.$fqdn" TXT "\"$token\""
 
-	success "challenge created - CF ID: $recordid"
+	success "Challenge created!"
 }
 
 clean_challenge() {
