@@ -34,3 +34,31 @@ For this method, you'd need to `export` the `CF_TOKEN` variable, with a suitable
 This method is less secure, as if someone were capable of reading these keys they'd have full access to your account.
 
 For this method, you'd need to `export` the `CF_EMAIL` and `CF_KEY` variables with your CloudFlare email and API key respectively.
+
+Usage
+-----
+
+Instead of editing the `cf-hook.sh` script to inject the authentication variables, I recommend that you instead create a `local-hook.sh` script and call the Cloudflare hook from there after initialising the authentication variables.
+
+  - Create a the `/etc/dehydrated/local-hook.sh` script with, for example:
+
+    ```bash
+    #!/bin/bash -e
+    
+    export CF_TOKEN=<YOUR_TOKEN_GOES_HERE>
+    ./cf-hook.sh $*
+    
+    # On success you can for example reload nginx
+    if [ "$1" == deploy_cert ]; then
+        systemctl reload nginx
+    fi
+    ```
+
+  - Make sure it's executable with `chmod 755 /etc/dehydrated/local-hook.sh`.
+
+  - Create a new local configuration file at `/etc/dehydrated/conf.d/local.sh` pointing to the local hook:
+
+    ```bash
+    CHALLENGETYPE=dns-01
+    HOOK=/etc/dehydrated/local-hook.sh
+    ```
